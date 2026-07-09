@@ -7,6 +7,7 @@ from ..db import get_db
 from ..models import TrackedShow, User, WatchedEpisode
 from ..schemas import (
     BulkMarkWatchedRequest,
+    BulkUnmarkWatchedRequest,
     MarkWatchedRequest,
     MyShowOut,
     TrackedShowOut,
@@ -165,6 +166,23 @@ def unmark_episode_watched(
     db.query(WatchedEpisode).filter_by(
         user_id=user.id, tvmaze_episode_id=tvmaze_episode_id
     ).delete()
+    db.commit()
+
+
+@router.post("/episodes/bulk-unmark", status_code=204)
+def unmark_episodes_watched_bulk(
+    payload: BulkUnmarkWatchedRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    requested_ids = set(payload.tvmaze_episode_ids)
+    if not requested_ids:
+        return
+
+    db.query(WatchedEpisode).filter(
+        WatchedEpisode.user_id == user.id,
+        WatchedEpisode.tvmaze_episode_id.in_(requested_ids),
+    ).delete(synchronize_session=False)
     db.commit()
 
 

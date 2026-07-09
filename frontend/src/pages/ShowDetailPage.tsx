@@ -73,6 +73,23 @@ export function ShowDetailPage() {
     }
   }
 
+  async function unmarkAllWatched(episodes: Episode[]) {
+    const watched = episodes.filter((ep) => watchedIds.has(ep.id));
+    if (watched.length === 0) return;
+
+    setBulkMarking(true);
+    try {
+      await api.unmarkManyWatched(watched);
+      setWatchedIds((prev) => {
+        const next = new Set(prev);
+        for (const ep of watched) next.delete(ep.id);
+        return next;
+      });
+    } finally {
+      setBulkMarking(false);
+    }
+  }
+
   if (loading) return <p>Loading...</p>;
   if (!show) return <p>Show not found.</p>;
 
@@ -97,6 +114,13 @@ export function ShowDetailPage() {
             >
               Mark all episodes watched
             </button>
+            <button
+              className="link-button"
+              onClick={() => unmarkAllWatched(show.episodes)}
+              disabled={bulkMarking}
+            >
+              Undo (unmark all)
+            </button>
           </div>
           {/* eslint-disable-next-line react/no-danger */}
           {show.summary && (
@@ -109,12 +133,21 @@ export function ShowDetailPage() {
         <div key={seasonNumber} className="season">
           <div className="season-header">
             <h3>Season {seasonNumber}</h3>
-            <button
-              onClick={() => markAllWatched(episodes)}
-              disabled={bulkMarking}
-            >
-              Mark season watched
-            </button>
+            <div className="season-actions">
+              <button
+                onClick={() => markAllWatched(episodes)}
+                disabled={bulkMarking}
+              >
+                Mark season watched
+              </button>
+              <button
+                className="link-button"
+                onClick={() => unmarkAllWatched(episodes)}
+                disabled={bulkMarking}
+              >
+                Undo
+              </button>
+            </div>
           </div>
           <ul className="episode-list">
             {episodes.map((ep) => (

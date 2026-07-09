@@ -113,4 +113,14 @@ export const api = {
       }),
     });
   },
+
+  async unmarkManyWatched(episodes: Episode[]): Promise<void> {
+    if (episodes.length === 0) return;
+    await request("/tracking/episodes/bulk-unmark", {
+      method: "POST",
+      body: JSON.stringify({
+        tvmaze_episode_ids: episodes.map((ep) => ep.id),
+      }),
+    });
+  },
 };

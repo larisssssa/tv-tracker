@@ -72,6 +72,10 @@ class BulkMarkWatchedRequest(BaseModel):
     tvmaze_episode_ids: list[int]
 
 
+class BulkUnmarkWatchedRequest(BaseModel):
+    tvmaze_episode_ids: list[int]
+
+
 class WatchedEpisodeOut(BaseModel):
     tvmaze_episode_id: int
     watched_at: datetime
