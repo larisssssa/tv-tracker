@@ -128,6 +128,18 @@ button:disabled {
   border-radius: 8px;
 }
 
+.season-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.season-header button {
+  font-size: 0.85em;
+  padding: 0.4rem 0.7rem;
+}
+
 .episode-list {
   list-style: none;
   padding: 0;

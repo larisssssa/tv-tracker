@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..models import TrackedShow, User, WatchedEpisode
 from ..schemas import (
+    BulkMarkWatchedRequest,
     MarkWatchedRequest,
     MyShowOut,
     TrackedShowOut,
@@ -116,6 +117,43 @@ def mark_episode_watched(
     db.commit()
     db.refresh(watched)
     return watched
+
+
+@router.post("/episodes/bulk", response_model=list[WatchedEpisodeOut], status_code=201)
+def mark_episodes_watched_bulk(
+    payload: BulkMarkWatchedRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    requested_ids = set(payload.tvmaze_episode_ids)
+    if not requested_ids:
+        return []
+
+    already_watched = (
+        db.query(WatchedEpisode)
+        .filter(
+            WatchedEpisode.user_id == user.id,
+            WatchedEpisode.tvmaze_episode_id.in_(requested_ids),
+        )
+        .all()
+    )
+    already_watched_ids = {w.tvmaze_episode_id for w in already_watched}
+
+    new_rows = [
+        WatchedEpisode(
+            user_id=user.id,
+            tvmaze_show_id=payload.tvmaze_show_id,
+            tvmaze_episode_id=episode_id,
+        )
+        for episode_id in requested_ids
+        if episode_id not in already_watched_ids
+    ]
+    db.add_all(new_rows)
+    db.commit()
+    for row in new_rows:
+        db.refresh(row)
+
+    return already_watched + new_rows
 
 
 @router.delete("/episodes/{tvmaze_episode_id}", status_code=204)

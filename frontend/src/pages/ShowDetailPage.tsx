@@ -9,6 +9,7 @@ export function ShowDetailPage() {
   const [watchedIds, setWatchedIds] = useState<Set<number>>(new Set());
   const [tracked, setTracked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [bulkMarking, setBulkMarking] = useState(false);
 
   useEffect(() => {
     if (!showId) return;
@@ -54,6 +55,24 @@ export function ShowDetailPage() {
     setTracked(true);
   }
 
+  async function markAllWatched(episodes: Episode[]) {
+    if (!show) return;
+    const unwatched = episodes.filter((ep) => !watchedIds.has(ep.id));
+    if (unwatched.length === 0) return;
+
+    setBulkMarking(true);
+    try {
+      await api.markManyWatched(show.id, unwatched);
+      setWatchedIds((prev) => {
+        const next = new Set(prev);
+        for (const ep of unwatched) next.add(ep.id);
+        return next;
+      });
+    } finally {
+      setBulkMarking(false);
+    }
+  }
+
   if (loading) return <p>Loading...</p>;
   if (!show) return <p>Show not found.</p>;
 
@@ -70,7 +89,15 @@ export function ShowDetailPage() {
         <div>
           <h2>{show.name}</h2>
           <p>{show.premiered?.slice(0, 4) ?? "unknown"} - {show.status}</p>
-          {!tracked && <button onClick={handleTrack}>Add to My Shows</button>}
+          <div className="actions">
+            {!tracked && <button onClick={handleTrack}>Add to My Shows</button>}
+            <button
+              onClick={() => markAllWatched(show.episodes)}
+              disabled={bulkMarking}
+            >
+              Mark all episodes watched
+            </button>
+          </div>
           {/* eslint-disable-next-line react/no-danger */}
           {show.summary && (
             <div dangerouslySetInnerHTML={{ __html: show.summary }} />
@@ -80,7 +107,15 @@ export function ShowDetailPage() {
 
       {[...seasons.entries()].map(([seasonNumber, episodes]) => (
         <div key={seasonNumber} className="season">
-          <h3>Season {seasonNumber}</h3>
+          <div className="season-header">
+            <h3>Season {seasonNumber}</h3>
+            <button
+              onClick={() => markAllWatched(episodes)}
+              disabled={bulkMarking}
+            >
+              Mark season watched
+            </button>
+          </div>
           <ul className="episode-list">
             {episodes.map((ep) => (
               <li key={ep.id} className="episode-list-item">

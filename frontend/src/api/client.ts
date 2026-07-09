@@ -102,4 +102,15 @@ export const api = {
   async unmarkWatched(episodeId: number): Promise<void> {
     await request(`/tracking/episodes/${episodeId}`, { method: "DELETE" });
   },
+
+  async markManyWatched(tvmazeShowId: number, episodes: Episode[]): Promise<void> {
+    if (episodes.length === 0) return;
+    await request("/tracking/episodes/bulk", {
+      method: "POST",
+      body: JSON.stringify({
+        tvmaze_show_id: tvmazeShowId,
+        tvmaze_episode_ids: episodes.map((ep) => ep.id),
+      }),
+    });
+  },
 };
