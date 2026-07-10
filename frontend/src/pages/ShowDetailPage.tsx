@@ -103,12 +103,19 @@ export function ShowDetailPage() {
     <div className="show-detail-page">
       <div className="show-header">
         {show.image && <img src={show.image} alt={show.name} />}
-        <div>
-          <h2>{show.name}</h2>
-          <p>{show.premiered?.slice(0, 4) ?? "unknown"} - {show.status}</p>
+        <div className="show-header-info">
+          <h2 className="show-header-title">{show.name}</h2>
+          <p className="show-header-meta">
+            {show.premiered?.slice(0, 4) ?? "unknown"} &middot; {show.status}
+          </p>
           <div className="actions">
-            {!tracked && <button onClick={handleTrack}>Add to My Shows</button>}
+            {!tracked && (
+              <button className="btn btn-primary" onClick={handleTrack}>
+                Add to My Shows
+              </button>
+            )}
             <button
+              className="btn btn-primary"
               onClick={() => markAllWatched(show.episodes)}
               disabled={bulkMarking}
             >
@@ -124,7 +131,10 @@ export function ShowDetailPage() {
           </div>
           {/* eslint-disable-next-line react/no-danger */}
           {show.summary && (
-            <div dangerouslySetInnerHTML={{ __html: show.summary }} />
+            <div
+              className="show-summary"
+              dangerouslySetInnerHTML={{ __html: show.summary }}
+            />
           )}
         </div>
       </div>
@@ -135,6 +145,7 @@ export function ShowDetailPage() {
             <h3>Season {seasonNumber}</h3>
             <div className="season-actions">
               <button
+                className="btn btn-ghost btn-small"
                 onClick={() => markAllWatched(episodes)}
                 disabled={bulkMarking}
               >
@@ -158,7 +169,7 @@ export function ShowDetailPage() {
                     checked={watchedIds.has(ep.id)}
                     onChange={() => toggleWatched(ep)}
                   />
-                  E{ep.number} &mdash; {ep.name}{" "}
+                  E{ep.number} &mdash; {ep.name}
                   <span className="airdate">{ep.airdate}</span>
                 </label>
               </li>

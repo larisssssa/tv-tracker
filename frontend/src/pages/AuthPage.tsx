@@ -31,34 +31,38 @@ export function AuthPage() {
 
   return (
     <div className="auth-page">
-      <h1>TV Tracker</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          minLength={8}
-          required
-        />
-        {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={submitting}>
-          {mode === "login" ? "Log in" : "Register"}
+      <h1 className="auth-headline">TV Tracker</h1>
+      <div className="auth-card card">
+        <form onSubmit={handleSubmit}>
+          <input
+            className="input"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            className="input"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            required
+          />
+          {error && <p className="error">{error}</p>}
+          <button className="btn btn-primary" type="submit" disabled={submitting}>
+            {mode === "login" ? "Log in" : "Register"}
+          </button>
+        </form>
+        <button
+          className="link-button"
+          onClick={() => setMode(mode === "login" ? "register" : "login")}
+        >
+          {mode === "login" ? "Need an account? Register" : "Have an account? Log in"}
         </button>
-      </form>
-      <button
-        className="link-button"
-        onClick={() => setMode(mode === "login" ? "register" : "login")}
-      >
-        {mode === "login" ? "Need an account? Register" : "Have an account? Log in"}
-      </button>
+      </div>
     </div>
   );
 }

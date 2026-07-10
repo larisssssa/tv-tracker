@@ -27,15 +27,19 @@ export function SearchPage() {
 
   return (
     <div className="search-page">
-      <h2>Search Shows</h2>
-      <form onSubmit={handleSearch}>
+      <div className="page-header">
+        <h2 className="page-title">Search Shows</h2>
+        <p className="page-subtitle">Find a show and add it to your list.</p>
+      </div>
+      <form className="search-form" onSubmit={handleSearch}>
         <input
+          className="input"
           type="text"
           placeholder="Search for a show..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button type="submit" disabled={loading}>
+        <button className="btn btn-primary" type="submit" disabled={loading}>
           {loading ? "Searching..." : "Search"}
         </button>
       </form>
@@ -44,16 +48,23 @@ export function SearchPage() {
         {results.map((show) => (
           <li key={show.id} className="show-list-item">
             {show.image && <img src={show.image} alt={show.name} />}
-            <div>
-              <Link to={`/shows/${show.id}`}>{show.name}</Link>
-              <p>{show.premiered?.slice(0, 4) ?? "unknown"} - {show.status}</p>
+            <div className="show-info">
+              <Link className="show-name" to={`/shows/${show.id}`}>
+                {show.name}
+              </Link>
+              <p className="show-meta">
+                {show.premiered?.slice(0, 4) ?? "unknown"} &middot; {show.status}
+              </p>
             </div>
-            <button
-              onClick={() => handleAdd(show.id)}
-              disabled={addedIds.has(show.id)}
-            >
-              {addedIds.has(show.id) ? "Added" : "Add to My Shows"}
-            </button>
+            <div className="actions">
+              <button
+                className="btn btn-primary btn-small"
+                onClick={() => handleAdd(show.id)}
+                disabled={addedIds.has(show.id)}
+              >
+                {addedIds.has(show.id) ? "Added" : "Add to My Shows"}
+              </button>
+            </div>
           </li>
         ))}
       </ul>

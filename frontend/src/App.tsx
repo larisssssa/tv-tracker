@@ -21,6 +21,10 @@ function NavBar() {
 
   return (
     <nav className="navbar">
+      <Link to="/my-shows" className="wordmark">
+        <span className="wordmark-icon" aria-hidden="true" />
+        TV Tracker
+      </Link>
       <Link to="/my-shows">My Shows</Link>
       <Link to="/search">Search</Link>
       <button
