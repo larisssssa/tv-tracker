@@ -12,3 +12,6 @@ frontend/dist/
 
 # editors / OS
 .DS_Store
+
+# planning
+plan/
