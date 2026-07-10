@@ -276,6 +276,18 @@
   background: color-mix(in srgb, var(--color-aurora-magenta) 12%, transparent);
 }
 
+.status-badge.status-upcoming {
+  color: var(--color-tidewater-navy);
+  border-color: transparent;
+  background: color-mix(in srgb, var(--color-cloud-veil) 45%, transparent);
+}
+
+.upcoming-note {
+  font-size: var(--text-caption);
+  color: var(--color-pebble);
+  white-space: nowrap;
+}
+
 .show-list-item .show-meta {
   font-size: var(--text-caption);
   color: var(--color-pebble);

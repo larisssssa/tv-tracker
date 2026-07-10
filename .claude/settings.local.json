@@ -3,7 +3,8 @@
     "allow": [
       "Bash(curl *)",
       "Bash(gh issue *)",
-      "Bash(gh label *)"
+      "Bash(gh label *)",
+      "Bash(node e2e_upnext_check.mjs)"
     ]
   }
 }

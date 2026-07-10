@@ -5,6 +5,7 @@ import { AuthPage } from "./pages/AuthPage";
 import { SearchPage } from "./pages/SearchPage";
 import { MyShowsPage } from "./pages/MyShowsPage";
 import { ShowDetailPage } from "./pages/ShowDetailPage";
+import { UpNextPage } from "./pages/UpNextPage";
 import "./App.css";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -21,10 +22,11 @@ function NavBar() {
 
   return (
     <nav className="navbar">
-      <Link to="/my-shows" className="wordmark">
+      <Link to="/up-next" className="wordmark">
         <span className="wordmark-icon" aria-hidden="true" />
         TV Tracker
       </Link>
+      <Link to="/up-next">Up Next</Link>
       <Link to="/my-shows">My Shows</Link>
       <Link to="/search">Search</Link>
       <button
@@ -47,6 +49,14 @@ function AppRoutes() {
       <main className="content">
         <Routes>
           <Route path="/login" element={<AuthPage />} />
+          <Route
+            path="/up-next"
+            element={
+              <RequireAuth>
+                <UpNextPage />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/my-shows"
             element={
@@ -71,7 +81,7 @@ function AppRoutes() {
               </RequireAuth>
             }
           />
-          <Route path="*" element={<Navigate to="/my-shows" replace />} />
+          <Route path="*" element={<Navigate to="/up-next" replace />} />
         </Routes>
       </main>
     </>

@@ -21,7 +21,7 @@ export function AuthPage() {
       } else {
         await register(email, password);
       }
-      navigate("/my-shows");
+      navigate("/up-next");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
