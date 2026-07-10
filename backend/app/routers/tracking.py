@@ -69,16 +69,21 @@ async def list_my_shows(
     for track in tracked:
         show = await tvmaze.get_show(track.tvmaze_show_id)
 
-        aired_episodes = [
-            ep
-            for ep in show.episodes
-            if ep.airstamp and datetime.fromisoformat(ep.airstamp) <= now
-        ]
+        aired_episodes = []
+        unaired_episodes = []
+        for ep in show.episodes:
+            if ep.airstamp and datetime.fromisoformat(ep.airstamp) <= now:
+                aired_episodes.append(ep)
+            else:
+                unaired_episodes.append(ep)
+
         aired_episodes.sort(key=lambda ep: (ep.season, ep.number))
+        unaired_episodes.sort(key=lambda ep: (ep.season, ep.number))
 
         next_episode = next(
             (ep for ep in aired_episodes if ep.id not in watched_ids), None
         )
+        next_unaired_episode = unaired_episodes[0] if unaired_episodes else None
         watched_count = sum(1 for ep in aired_episodes if ep.id in watched_ids)
 
         results.append(
@@ -86,7 +91,9 @@ async def list_my_shows(
                 tvmaze_show_id=show.id,
                 name=show.name,
                 image=show.image,
+                status=show.status,
                 next_episode=next_episode,
+                next_unaired_episode=next_unaired_episode,
                 watched_count=watched_count,
                 total_aired_count=len(aired_episodes),
             )

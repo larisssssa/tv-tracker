@@ -90,6 +90,8 @@ class MyShowOut(BaseModel):
     tvmaze_show_id: int
     name: str
     image: str | None = None
+    status: str | None = None
     next_episode: Episode | None = None
+    next_unaired_episode: Episode | None = None
     watched_count: int
     total_aired_count: int

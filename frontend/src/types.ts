@@ -25,7 +25,9 @@ export interface MyShow {
   tvmaze_show_id: number;
   name: string;
   image: string | null;
+  status: string | null;
   next_episode: Episode | null;
+  next_unaired_episode: Episode | null;
   watched_count: number;
   total_aired_count: number;
 }

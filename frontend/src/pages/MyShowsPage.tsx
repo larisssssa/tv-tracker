@@ -53,9 +53,16 @@ export function MyShowsPage() {
           <li key={show.tvmaze_show_id} className="show-list-item">
             {show.image && <img src={show.image} alt={show.name} />}
             <div className="show-info">
-              <Link className="show-name" to={`/shows/${show.tvmaze_show_id}`}>
-                {show.name}
-              </Link>
+              <div className="show-title-row">
+                <Link className="show-name" to={`/shows/${show.tvmaze_show_id}`}>
+                  {show.name}
+                </Link>
+                {show.status && (
+                  <span className={`status-badge status-${show.status.toLowerCase()}`}>
+                    {show.status}
+                  </span>
+                )}
+              </div>
               <p className="show-progress">
                 {show.watched_count} / {show.total_aired_count} watched
               </p>
@@ -65,7 +72,15 @@ export function MyShowsPage() {
                   &mdash; {show.next_episode.name}
                 </p>
               ) : (
-                <p className="show-next-up">All caught up!</p>
+                <p className="show-next-up">You're caught up on aired episodes!</p>
+              )}
+              {show.next_unaired_episode?.airdate && (
+                <p className="show-upcoming">
+                  Airs {show.next_unaired_episode.airdate}: S
+                  {show.next_unaired_episode.season}E
+                  {show.next_unaired_episode.number} &mdash;{" "}
+                  {show.next_unaired_episode.name}
+                </p>
               )}
             </div>
             <div className="actions">

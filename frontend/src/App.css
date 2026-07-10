@@ -252,6 +252,30 @@
   text-decoration: none;
 }
 
+.show-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: var(--radius-buttons);
+  color: var(--color-pebble);
+  border: 1px solid var(--color-silver-lining);
+}
+
+.status-badge.status-running {
+  color: var(--color-aurora-magenta);
+  border-color: transparent;
+  background: color-mix(in srgb, var(--color-aurora-magenta) 12%, transparent);
+}
+
 .show-list-item .show-meta {
   font-size: var(--text-caption);
   color: var(--color-pebble);
@@ -269,6 +293,12 @@
   font-size: 13px;
   color: var(--color-aurora-magenta);
   font-weight: var(--font-weight-medium);
+  margin-top: 2px;
+}
+
+.show-list-item .show-upcoming {
+  font-size: 13px;
+  color: var(--color-pebble);
   margin-top: 2px;
 }
 
