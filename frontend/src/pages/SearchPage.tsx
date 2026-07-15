@@ -1,23 +1,46 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { ShowSummary } from "../types";
+
+const DEBOUNCE_MS = 300;
 
 export function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<ShowSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
+  const latestRequestId = useRef(0);
 
-  async function handleSearch(e: FormEvent) {
-    e.preventDefault();
-    if (!query.trim()) return;
+  async function runSearch(searchQuery: string) {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
+    const requestId = ++latestRequestId.current;
     setLoading(true);
     try {
-      setResults(await api.searchShows(query));
+      const shows = await api.searchShows(trimmed);
+      // Ignore stale responses: a faster later request may have already resolved.
+      if (requestId !== latestRequestId.current) return;
+      setResults(shows);
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestId.current) setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    const timeout = setTimeout(() => runSearch(query), DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    runSearch(query);
   }
 
   async function handleAdd(showId: number) {
@@ -31,7 +54,7 @@ export function SearchPage() {
         <h2 className="page-title">Search Shows</h2>
         <p className="page-subtitle">Find a show and add it to your list.</p>
       </div>
-      <form className="search-form" onSubmit={handleSearch}>
+      <form className="search-form" onSubmit={handleSubmit}>
         <input
           className="input"
           type="text"
