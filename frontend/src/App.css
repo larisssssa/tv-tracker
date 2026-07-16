@@ -30,7 +30,8 @@
   flex-shrink: 0;
 }
 
-.navbar a {
+.navbar a,
+.navbar-link {
   text-decoration: none;
   font-size: var(--text-caption);
   font-weight: var(--font-weight-medium);
@@ -39,6 +40,14 @@
 
 .navbar a.active {
   color: var(--color-aurora-magenta);
+}
+
+.navbar-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 /* ---------- Page shell ---------- */
@@ -54,6 +63,7 @@
 /* ---------- Buttons ---------- */
 
 .btn {
+  display: inline-block;
   font: inherit;
   font-size: var(--text-caption);
   font-weight: var(--font-weight-semibold);
@@ -61,6 +71,7 @@
   padding: 14px 30px;
   border: none;
   cursor: pointer;
+  text-decoration: none;
   transition: opacity 0.15s ease, transform 0.15s ease;
   white-space: nowrap;
 }
@@ -326,9 +337,13 @@
   text-align: center;
   padding: var(--spacing-96) var(--spacing-16);
   color: var(--color-pebble);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-16);
 }
 
-.empty-state a {
+.empty-state a:not(.btn) {
   color: var(--color-tidewater-navy);
   font-weight: var(--font-weight-medium);
 }
@@ -407,6 +422,37 @@
 .season-header h3 {
   font-size: var(--text-heading);
   letter-spacing: var(--tracking-heading);
+}
+
+.season-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-16);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+
+.season-toggle-arrow {
+  display: inline-flex;
+  color: var(--color-pebble);
+  font-size: 14px;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.season-toggle-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.season-progress {
+  font-size: var(--text-caption);
+  color: var(--color-pebble);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
 }
 
 .season-actions {

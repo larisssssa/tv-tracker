@@ -30,7 +30,7 @@ function NavBar() {
       <Link to="/my-shows">My Shows</Link>
       <Link to="/search">Search</Link>
       <button
-        className="link-button"
+        className="navbar-link"
         onClick={() => {
           logout();
           navigate("/login");
