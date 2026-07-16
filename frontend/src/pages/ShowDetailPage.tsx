@@ -10,6 +10,7 @@ export function ShowDetailPage() {
   const [tracked, setTracked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bulkMarking, setBulkMarking] = useState(false);
+  const [expandedSeasons, setExpandedSeasons] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!showId) return;
@@ -26,6 +27,16 @@ export function ShowDetailPage() {
         setShow(detail);
         setWatchedIds(watched);
         setTracked(myShows.some((s) => s.tvmaze_show_id === id));
+
+        const sortedEpisodes = [...detail.episodes].sort(
+          (a, b) => a.season - b.season || a.number - b.number
+        );
+        const nextUnwatched = sortedEpisodes.find((ep) => !watched.has(ep.id));
+        const defaultSeason =
+          nextUnwatched?.season ?? sortedEpisodes.at(-1)?.season;
+        if (defaultSeason !== undefined) {
+          setExpandedSeasons(new Set([defaultSeason]));
+        }
       } finally {
         setLoading(false);
       }
@@ -33,6 +44,18 @@ export function ShowDetailPage() {
 
     load();
   }, [showId]);
+
+  function toggleSeasonExpanded(seasonNumber: number) {
+    setExpandedSeasons((prev) => {
+      const next = new Set(prev);
+      if (next.has(seasonNumber)) {
+        next.delete(seasonNumber);
+      } else {
+        next.add(seasonNumber);
+      }
+      return next;
+    });
+  }
 
   async function toggleWatched(episode: Episode) {
     if (!show) return;
@@ -122,7 +145,7 @@ export function ShowDetailPage() {
               Mark all episodes watched
             </button>
             <button
-              className="link-button"
+              className="btn btn-ghost"
               onClick={() => unmarkAllWatched(show.episodes)}
               disabled={bulkMarking}
             >
@@ -139,44 +162,66 @@ export function ShowDetailPage() {
         </div>
       </div>
 
-      {[...seasons.entries()].map(([seasonNumber, episodes]) => (
-        <div key={seasonNumber} className="season">
-          <div className="season-header">
-            <h3>Season {seasonNumber}</h3>
-            <div className="season-actions">
+      {[...seasons.entries()].map(([seasonNumber, episodes]) => {
+        const isExpanded = expandedSeasons.has(seasonNumber);
+        const watchedCount = episodes.filter((ep) => watchedIds.has(ep.id)).length;
+
+        return (
+          <div key={seasonNumber} className="season">
+            <div className="season-header">
               <button
-                className="btn btn-ghost btn-small"
-                onClick={() => markAllWatched(episodes)}
-                disabled={bulkMarking}
+                className="season-toggle"
+                onClick={() => toggleSeasonExpanded(seasonNumber)}
+                aria-expanded={isExpanded}
               >
-                Mark season watched
+                <span
+                  className={`season-toggle-arrow${isExpanded ? " expanded" : ""}`}
+                  aria-hidden="true"
+                >
+                  &#9656;
+                </span>
+                <h3>Season {seasonNumber}</h3>
+                <span className="season-progress">
+                  {watchedCount} / {episodes.length}
+                </span>
               </button>
-              <button
-                className="link-button"
-                onClick={() => unmarkAllWatched(episodes)}
-                disabled={bulkMarking}
-              >
-                Undo
-              </button>
+              <div className="season-actions">
+                <button
+                  className="btn btn-primary btn-small"
+                  onClick={() => markAllWatched(episodes)}
+                  disabled={bulkMarking}
+                >
+                  Mark season watched
+                </button>
+                <button
+                  className="btn btn-ghost btn-small"
+                  onClick={() => unmarkAllWatched(episodes)}
+                  disabled={bulkMarking}
+                >
+                  Undo
+                </button>
+              </div>
             </div>
+            {isExpanded && (
+              <ul className="episode-list">
+                {episodes.map((ep) => (
+                  <li key={ep.id} className="episode-list-item">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={watchedIds.has(ep.id)}
+                        onChange={() => toggleWatched(ep)}
+                      />
+                      E{ep.number} &mdash; {ep.name}
+                      <span className="airdate">{ep.airdate}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          <ul className="episode-list">
-            {episodes.map((ep) => (
-              <li key={ep.id} className="episode-list-item">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={watchedIds.has(ep.id)}
-                    onChange={() => toggleWatched(ep)}
-                  />
-                  E{ep.number} &mdash; {ep.name}
-                  <span className="airdate">{ep.airdate}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

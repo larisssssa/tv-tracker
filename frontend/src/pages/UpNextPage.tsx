@@ -57,7 +57,9 @@ export function UpNextPage() {
     return (
       <div className="empty-state">
         <p>You aren't tracking any shows yet.</p>
-        <Link to="/search">Search for a show to add</Link>
+        <Link to="/search" className="btn btn-primary">
+          Search for a show to add
+        </Link>
       </div>
     );
   }
