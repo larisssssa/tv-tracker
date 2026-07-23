@@ -44,6 +44,10 @@ only stores *your* tracking state: which TVMaze show IDs you've added,
 and which TVMaze episode IDs you've watched. This keeps our data model
 simple and means we never go stale relative to TVMaze's catalog.
 
+Removing a show from "My Shows" only deletes its `TrackedShow` row —
+your `WatchedEpisode` history for that show is kept. Re-adding the same
+show later restores your watched progress instead of starting over.
+
 ## Features
 
 - **Search** — debounced live search (300ms) against TVMaze, no need to hit enter.
