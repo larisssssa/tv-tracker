@@ -26,8 +26,12 @@ export function MyShowsPage() {
     await refresh();
   }
 
-  async function handleRemove(showId: number) {
-    await api.untrackShow(showId);
+  async function handleRemove(show: MyShow) {
+    const confirmed = window.confirm(
+      `Remove "${show.name}" from My Shows? Your watch history for this show will be kept, so progress picks back up if you re-add it later.`
+    );
+    if (!confirmed) return;
+    await api.untrackShow(show.tvmaze_show_id);
     await refresh();
   }
 
@@ -96,7 +100,7 @@ export function MyShowsPage() {
               )}
               <button
                 className="btn btn-ghost btn-small"
-                onClick={() => handleRemove(show.tvmaze_show_id)}
+                onClick={() => handleRemove(show)}
               >
                 Remove
               </button>
