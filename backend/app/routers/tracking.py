@@ -47,6 +47,9 @@ def untrack_show(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    # Intentionally does not touch WatchedEpisode rows: watch history persists
+    # after untracking, so re-tracking the same show later restores progress
+    # instead of starting over. See issue #6.
     db.query(TrackedShow).filter_by(
         user_id=user.id, tvmaze_show_id=tvmaze_show_id
     ).delete()
