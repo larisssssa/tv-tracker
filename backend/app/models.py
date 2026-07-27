@@ -37,6 +37,9 @@ class TrackedShow(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     tvmaze_show_id: Mapped[int] = mapped_column(Integer, index=True)
     added_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    # User's own rating of the show as a whole — independent of any
+    # episode ratings, not an average of them.
+    rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="tracked_shows")
 
@@ -52,5 +55,6 @@ class WatchedEpisode(Base):
     tvmaze_show_id: Mapped[int] = mapped_column(Integer, index=True)
     tvmaze_episode_id: Mapped[int] = mapped_column(Integer, index=True)
     watched_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="watched_episodes")
