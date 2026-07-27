@@ -1,4 +1,11 @@
-import type { Episode, MyShow, ShowDetail, ShowSummary, User } from "../types";
+import type {
+  Episode,
+  MyShow,
+  ShowDetail,
+  ShowSummary,
+  User,
+  WatchedEpisode,
+} from "../types";
 
 const BASE_URL = "http://localhost:8000";
 
@@ -82,11 +89,22 @@ export const api = {
     await request(`/tracking/shows/${tvmazeShowId}`, { method: "DELETE" });
   },
 
-  async watchedEpisodeIds(): Promise<Set<number>> {
-    const watched = await request<{ tvmaze_episode_id: number }[]>(
-      "/tracking/episodes/watched"
-    );
-    return new Set(watched.map((w) => w.tvmaze_episode_id));
+  async watchedEpisodes(): Promise<WatchedEpisode[]> {
+    return request("/tracking/episodes/watched");
+  },
+
+  async rateEpisode(episodeId: number, rating: number): Promise<WatchedEpisode> {
+    return request(`/tracking/episodes/${episodeId}/rating`, {
+      method: "PUT",
+      body: JSON.stringify({ rating }),
+    });
+  },
+
+  async rateShow(tvmazeShowId: number, rating: number): Promise<void> {
+    await request(`/tracking/shows/${tvmazeShowId}/rating`, {
+      method: "PUT",
+      body: JSON.stringify({ rating }),
+    });
   },
 
   async markWatched(tvmazeShowId: number, episode: Episode): Promise<void> {

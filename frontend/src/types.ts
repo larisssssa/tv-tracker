@@ -30,6 +30,13 @@ export interface MyShow {
   next_unaired_episode: Episode | null;
   watched_count: number;
   total_aired_count: number;
+  rating: number | null;
+}
+
+export interface WatchedEpisode {
+  tvmaze_episode_id: number;
+  watched_at: string;
+  rating: number | null;
 }
 
 export interface User {
