@@ -11,6 +11,8 @@ backend/    FastAPI + SQLite
   app/
     main.py           app entrypoint, CORS, router registration, /health
     models.py         SQLAlchemy models: User, TrackedShow, WatchedEpisode
+                        (both TrackedShow and WatchedEpisode carry an
+                        optional 1-5 `rating` field, set independently)
     schemas.py         Pydantic request/response shapes
     security.py        password hashing (bcrypt) + JWT auth
     db.py               SQLite engine/session setup
@@ -31,6 +33,8 @@ frontend/   React + TypeScript + Vite
       MyShowsPage.tsx     tracked shows with watch progress
       SearchPage.tsx      live show search
       ShowDetailPage.tsx  season/episode list, bulk watch actions
+    components/
+      StarRating.tsx      shared 1-5 star rating control (episode + show)
     api/client.ts        typed fetch wrapper, one function per endpoint
     context/AuthContext.tsx
     types.ts
@@ -64,6 +68,10 @@ show later restores your watched progress instead of starting over.
   shows (many seasons/episodes) don't turn into an endless scroll.
 - **Status badges** — shows are tagged Running/Ended/etc. from TVMaze;
   Up Next also tags not-yet-aired episodes as Upcoming.
+- **Ratings** — a 1-5 star rating on any watched episode (on the show
+  detail page) and a separate 1-5 star rating on the show itself (on
+  "My Shows"). The two are independent: a show's rating is not an
+  average of its episode ratings.
 
 ## Design system
 
@@ -84,14 +92,16 @@ from `/auth/login`). `/shows/*` routes are unauthenticated proxies to TVMaze.
 | POST | `/auth/login` | OAuth2 form fields (`username`/`password`) → 200 + JWT bearer token |
 | GET | `/shows/search?q=` | Search TVMaze; empty query returns `[]` |
 | GET | `/shows/{show_id}` | Show detail + full episode list |
-| GET | `/tracking/shows` | "My Shows" — each show enriched with `next_episode`, `next_unaired_episode`, watch counts |
+| GET | `/tracking/shows` | "My Shows" — each show enriched with `next_episode`, `next_unaired_episode`, watch counts, `rating` |
 | POST | `/tracking/shows` | Track a show; idempotent |
 | DELETE | `/tracking/shows/{tvmaze_show_id}` | Untrack a show |
+| PUT | `/tracking/shows/{tvmaze_show_id}/rating` | Set/update the show's own 1-5 rating; 404 if not tracked |
 | POST | `/tracking/episodes` | Mark one episode watched; idempotent |
 | DELETE | `/tracking/episodes/{tvmaze_episode_id}` | Unmark one episode |
+| PUT | `/tracking/episodes/{tvmaze_episode_id}/rating` | Set/update a watched episode's 1-5 rating; 404 if not watched |
 | POST | `/tracking/episodes/bulk` | Mark many episodes watched at once; idempotent per-episode |
 | POST | `/tracking/episodes/bulk-unmark` | Unmark many episodes at once |
-| GET | `/tracking/episodes/watched` | All of the current user's watched episodes |
+| GET | `/tracking/episodes/watched` | All of the current user's watched episodes, each with `rating` |
 | GET | `/health` | `{"status": "ok"}` |
 
 Interactive docs (Swagger UI) are available at http://localhost:8000/docs
@@ -125,10 +135,11 @@ Open http://localhost:5173.
 
 ## Testing
 
-Backend has a pytest suite in `backend/tests/` (15 tests): auth flows,
-bulk mark/unmark correctness and idempotency, cross-user isolation, and
-the "my shows" next-episode/next-unaired-episode computation (using
-`pytest-mock` to stub TVMaze responses so tests don't hit the network).
+Backend has a pytest suite in `backend/tests/` (25 tests): auth flows,
+bulk mark/unmark correctness and idempotency, cross-user isolation, the
+"my shows" next-episode/next-unaired-episode computation (using
+`pytest-mock` to stub TVMaze responses so tests don't hit the network),
+and episode/show rating validation and persistence.
 
 ```bash
 cd backend
