@@ -4,6 +4,23 @@ A TV Time-style episode tracker: search shows, track them, mark episodes
 watched (individually or in bulk), and see what to watch next across
 everything you track.
 
+## Screenshots
+
+| Up Next | My Shows |
+| --- | --- |
+| ![Up Next — next episode per tracked show](docs/screenshots/up-next.png) | ![My Shows — watch progress and star ratings](docs/screenshots/my-shows.png) |
+
+| Search | Show detail |
+| --- | --- |
+| ![Search — live TVMaze search results](docs/screenshots/search.png) | ![Show detail — collapsible seasons, episode ratings](docs/screenshots/show-detail.png) |
+
+<details>
+<summary>Login</summary>
+
+![Login page](docs/screenshots/auth.png)
+
+</details>
+
 ## Architecture
 
 ```
