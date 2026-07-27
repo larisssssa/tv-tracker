@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 # --- Auth ---
@@ -57,9 +57,14 @@ class TrackShowRequest(BaseModel):
 class TrackedShowOut(BaseModel):
     tvmaze_show_id: int
     added_at: datetime
+    rating: int | None = None
 
     class Config:
         from_attributes = True
+
+
+class RateShowRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
 
 
 class MarkWatchedRequest(BaseModel):
@@ -79,9 +84,14 @@ class BulkUnmarkWatchedRequest(BaseModel):
 class WatchedEpisodeOut(BaseModel):
     tvmaze_episode_id: int
     watched_at: datetime
+    rating: int | None = None
 
     class Config:
         from_attributes = True
+
+
+class RateEpisodeRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
 
 
 class MyShowOut(BaseModel):
@@ -95,3 +105,4 @@ class MyShowOut(BaseModel):
     next_unaired_episode: Episode | None = None
     watched_count: int
     total_aired_count: int
+    rating: int | None = None
