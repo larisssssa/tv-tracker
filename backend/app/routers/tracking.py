@@ -10,6 +10,8 @@ from ..schemas import (
     BulkUnmarkWatchedRequest,
     MarkWatchedRequest,
     MyShowOut,
+    RateEpisodeRequest,
+    RateShowRequest,
     TrackedShowOut,
     TrackShowRequest,
     WatchedEpisodeOut,
@@ -56,6 +58,27 @@ def untrack_show(
     db.commit()
 
 
+@router.put("/shows/{tvmaze_show_id}/rating", response_model=TrackedShowOut)
+def rate_show(
+    tvmaze_show_id: int,
+    payload: RateShowRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    tracked = (
+        db.query(TrackedShow)
+        .filter_by(user_id=user.id, tvmaze_show_id=tvmaze_show_id)
+        .first()
+    )
+    if not tracked:
+        raise HTTPException(status_code=404, detail="Show is not tracked")
+
+    tracked.rating = payload.rating
+    db.commit()
+    db.refresh(tracked)
+    return tracked
+
+
 @router.get("/shows", response_model=list[MyShowOut])
 async def list_my_shows(
     db: Session = Depends(get_db), user: User = Depends(get_current_user)
@@ -95,6 +118,7 @@ async def list_my_shows(
                 name=show.name,
                 image=show.image,
                 status=show.status,
+                rating=track.rating,
                 next_episode=next_episode,
                 next_unaired_episode=next_unaired_episode,
                 watched_count=watched_count,
@@ -165,6 +189,27 @@ def mark_episodes_watched_bulk(
         db.refresh(row)
 
     return already_watched + new_rows
+
+
+@router.put("/episodes/{tvmaze_episode_id}/rating", response_model=WatchedEpisodeOut)
+def rate_episode(
+    tvmaze_episode_id: int,
+    payload: RateEpisodeRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    watched = (
+        db.query(WatchedEpisode)
+        .filter_by(user_id=user.id, tvmaze_episode_id=tvmaze_episode_id)
+        .first()
+    )
+    if not watched:
+        raise HTTPException(status_code=404, detail="Episode is not marked watched")
+
+    watched.rating = payload.rating
+    db.commit()
+    db.refresh(watched)
+    return watched
 
 
 @router.delete("/episodes/{tvmaze_episode_id}", status_code=204)
