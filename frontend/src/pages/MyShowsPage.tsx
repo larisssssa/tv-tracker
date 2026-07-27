@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import { StarRating } from "../components/StarRating";
 import type { MyShow } from "../types";
 
 export function MyShowsPage() {
@@ -24,6 +25,15 @@ export function MyShowsPage() {
     if (!show.next_episode) return;
     await api.markWatched(show.tvmaze_show_id, show.next_episode);
     await refresh();
+  }
+
+  async function handleRate(show: MyShow, rating: number) {
+    await api.rateShow(show.tvmaze_show_id, rating);
+    setShows((prev) =>
+      prev.map((s) =>
+        s.tvmaze_show_id === show.tvmaze_show_id ? { ...s, rating } : s
+      )
+    );
   }
 
   async function handleRemove(show: MyShow) {
@@ -72,6 +82,11 @@ export function MyShowsPage() {
               <p className="show-progress">
                 {show.watched_count} / {show.total_aired_count} watched
               </p>
+              <StarRating
+                value={show.rating}
+                onRate={(rating) => handleRate(show, rating)}
+                size="small"
+              />
               {show.next_episode ? (
                 <p className="show-next-up">
                   Next up: S{show.next_episode.season}E{show.next_episode.number}{" "}

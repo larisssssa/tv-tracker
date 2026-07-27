@@ -472,6 +472,10 @@
 }
 
 .episode-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
   padding: var(--spacing-16);
   border-bottom: 1px solid var(--color-silver-lining);
 }
@@ -487,6 +491,8 @@
   cursor: pointer;
   font-size: var(--text-body);
   color: var(--color-midnight-ink);
+  flex: 1;
+  min-width: 0;
 }
 
 .episode-list-item input[type="checkbox"] {
@@ -500,4 +506,32 @@
   color: var(--color-pebble);
   font-size: var(--text-caption);
   margin-left: auto;
+}
+
+/* ---------- Ratings ---------- */
+
+.star-rating {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.star-rating-star {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-silver-lining);
+  line-height: 1;
+}
+
+.star-rating-star.filled {
+  color: var(--color-aurora-magenta);
+}
+
+.star-rating-medium .star-rating-star {
+  font-size: 20px;
+}
+
+.star-rating-small .star-rating-star {
+  font-size: 16px;
 }

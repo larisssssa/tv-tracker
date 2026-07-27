@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api/client";
-import type { Episode, ShowDetail } from "../types";
+import { StarRating } from "../components/StarRating";
+import type { Episode, ShowDetail, WatchedEpisode } from "../types";
 
 export function ShowDetailPage() {
   const { showId } = useParams<{ showId: string }>();
   const [show, setShow] = useState<ShowDetail | null>(null);
-  const [watchedIds, setWatchedIds] = useState<Set<number>>(new Set());
+  const [watchedMap, setWatchedMap] = useState<Map<number, WatchedEpisode>>(new Map());
   const [tracked, setTracked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bulkMarking, setBulkMarking] = useState(false);
@@ -19,19 +20,20 @@ export function ShowDetailPage() {
     async function load() {
       setLoading(true);
       try {
-        const [detail, watched, myShows] = await Promise.all([
+        const [detail, watchedEpisodes, myShows] = await Promise.all([
           api.getShow(id),
-          api.watchedEpisodeIds(),
+          api.watchedEpisodes(),
           api.myShows(),
         ]);
         setShow(detail);
-        setWatchedIds(watched);
+        setWatchedMap(new Map(watchedEpisodes.map((w) => [w.tvmaze_episode_id, w])));
         setTracked(myShows.some((s) => s.tvmaze_show_id === id));
 
         const sortedEpisodes = [...detail.episodes].sort(
           (a, b) => a.season - b.season || a.number - b.number
         );
-        const nextUnwatched = sortedEpisodes.find((ep) => !watched.has(ep.id));
+        const watchedIds = new Set(watchedEpisodes.map((w) => w.tvmaze_episode_id));
+        const nextUnwatched = sortedEpisodes.find((ep) => !watchedIds.has(ep.id));
         const defaultSeason =
           nextUnwatched?.season ?? sortedEpisodes.at(-1)?.season;
         if (defaultSeason !== undefined) {
@@ -59,17 +61,30 @@ export function ShowDetailPage() {
 
   async function toggleWatched(episode: Episode) {
     if (!show) return;
-    if (watchedIds.has(episode.id)) {
+    if (watchedMap.has(episode.id)) {
       await api.unmarkWatched(episode.id);
-      setWatchedIds((prev) => {
-        const next = new Set(prev);
+      setWatchedMap((prev) => {
+        const next = new Map(prev);
         next.delete(episode.id);
         return next;
       });
     } else {
       await api.markWatched(show.id, episode);
-      setWatchedIds((prev) => new Set(prev).add(episode.id));
+      setWatchedMap((prev) => {
+        const next = new Map(prev);
+        next.set(episode.id, {
+          tvmaze_episode_id: episode.id,
+          watched_at: new Date().toISOString(),
+          rating: null,
+        });
+        return next;
+      });
     }
+  }
+
+  async function rateEpisode(episode: Episode, rating: number) {
+    const updated = await api.rateEpisode(episode.id, rating);
+    setWatchedMap((prev) => new Map(prev).set(episode.id, updated));
   }
 
   async function handleTrack() {
@@ -80,15 +95,21 @@ export function ShowDetailPage() {
 
   async function markAllWatched(episodes: Episode[]) {
     if (!show) return;
-    const unwatched = episodes.filter((ep) => !watchedIds.has(ep.id));
+    const unwatched = episodes.filter((ep) => !watchedMap.has(ep.id));
     if (unwatched.length === 0) return;
 
     setBulkMarking(true);
     try {
       await api.markManyWatched(show.id, unwatched);
-      setWatchedIds((prev) => {
-        const next = new Set(prev);
-        for (const ep of unwatched) next.add(ep.id);
+      setWatchedMap((prev) => {
+        const next = new Map(prev);
+        for (const ep of unwatched) {
+          next.set(ep.id, {
+            tvmaze_episode_id: ep.id,
+            watched_at: new Date().toISOString(),
+            rating: null,
+          });
+        }
         return next;
       });
     } finally {
@@ -97,15 +118,15 @@ export function ShowDetailPage() {
   }
 
   async function unmarkAllWatched(episodes: Episode[]) {
-    const watched = episodes.filter((ep) => watchedIds.has(ep.id));
-    if (watched.length === 0) return;
+    const alreadyWatched = episodes.filter((ep) => watchedMap.has(ep.id));
+    if (alreadyWatched.length === 0) return;
 
     setBulkMarking(true);
     try {
-      await api.unmarkManyWatched(watched);
-      setWatchedIds((prev) => {
-        const next = new Set(prev);
-        for (const ep of watched) next.delete(ep.id);
+      await api.unmarkManyWatched(alreadyWatched);
+      setWatchedMap((prev) => {
+        const next = new Map(prev);
+        for (const ep of alreadyWatched) next.delete(ep.id);
         return next;
       });
     } finally {
@@ -164,7 +185,7 @@ export function ShowDetailPage() {
 
       {[...seasons.entries()].map(([seasonNumber, episodes]) => {
         const isExpanded = expandedSeasons.has(seasonNumber);
-        const watchedCount = episodes.filter((ep) => watchedIds.has(ep.id)).length;
+        const watchedCount = episodes.filter((ep) => watchedMap.has(ep.id)).length;
 
         return (
           <div key={seasonNumber} className="season">
@@ -204,19 +225,29 @@ export function ShowDetailPage() {
             </div>
             {isExpanded && (
               <ul className="episode-list">
-                {episodes.map((ep) => (
-                  <li key={ep.id} className="episode-list-item">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={watchedIds.has(ep.id)}
-                        onChange={() => toggleWatched(ep)}
-                      />
-                      E{ep.number} &mdash; {ep.name}
-                      <span className="airdate">{ep.airdate}</span>
-                    </label>
-                  </li>
-                ))}
+                {episodes.map((ep) => {
+                  const watchedEpisode = watchedMap.get(ep.id);
+                  return (
+                    <li key={ep.id} className="episode-list-item">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={watchedEpisode !== undefined}
+                          onChange={() => toggleWatched(ep)}
+                        />
+                        E{ep.number} &mdash; {ep.name}
+                        <span className="airdate">{ep.airdate}</span>
+                      </label>
+                      {watchedEpisode && (
+                        <StarRating
+                          value={watchedEpisode.rating}
+                          onRate={(rating) => rateEpisode(ep, rating)}
+                          size="small"
+                        />
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
