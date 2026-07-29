@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AuthPage } from "./pages/AuthPage";
 import { SearchPage } from "./pages/SearchPage";
 import { MyShowsPage } from "./pages/MyShowsPage";
+import { ListsPage } from "./pages/ListsPage";
 import { ShowDetailPage } from "./pages/ShowDetailPage";
 import { UpNextPage } from "./pages/UpNextPage";
 import "./App.css";
@@ -28,6 +29,7 @@ function NavBar() {
       </Link>
       <Link to="/up-next">Up Next</Link>
       <Link to="/my-shows">My Shows</Link>
+      <Link to="/lists">Lists</Link>
       <Link to="/search">Search</Link>
       <button
         className="navbar-link"
@@ -62,6 +64,14 @@ function AppRoutes() {
             element={
               <RequireAuth>
                 <MyShowsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/lists"
+            element={
+              <RequireAuth>
+                <ListsPage />
               </RequireAuth>
             }
           />
