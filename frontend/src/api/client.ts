@@ -2,6 +2,8 @@ import type {
   Episode,
   MyShow,
   ShowDetail,
+  ShowList,
+  ShowListDetail,
   ShowSummary,
   User,
   WatchedEpisode,
@@ -140,5 +142,39 @@ export const api = {
         tvmaze_episode_ids: episodes.map((ep) => ep.id),
       }),
     });
+  },
+
+  async listLists(): Promise<ShowList[]> {
+    return request("/lists");
+  },
+
+  async getList(listId: number): Promise<ShowListDetail> {
+    return request(`/lists/${listId}`);
+  },
+
+  async createList(name: string): Promise<ShowList> {
+    return request("/lists", { method: "POST", body: JSON.stringify({ name }) });
+  },
+
+  async renameList(listId: number, name: string): Promise<ShowList> {
+    return request(`/lists/${listId}`, {
+      method: "PUT",
+      body: JSON.stringify({ name }),
+    });
+  },
+
+  async deleteList(listId: number): Promise<void> {
+    await request(`/lists/${listId}`, { method: "DELETE" });
+  },
+
+  async addShowToList(listId: number, tvmazeShowId: number): Promise<void> {
+    await request(`/lists/${listId}/shows`, {
+      method: "POST",
+      body: JSON.stringify({ tvmaze_show_id: tvmazeShowId }),
+    });
+  },
+
+  async removeShowFromList(listId: number, tvmazeShowId: number): Promise<void> {
+    await request(`/lists/${listId}/shows/${tvmazeShowId}`, { method: "DELETE" });
   },
 };
