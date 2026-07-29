@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../api/client";
+import { AddToListPicker } from "../components/AddToListPicker";
 import { StarRating } from "../components/StarRating";
 import type { Episode, ShowDetail, WatchedEpisode } from "../types";
 
@@ -12,6 +13,7 @@ export function ShowDetailPage() {
   const [loading, setLoading] = useState(true);
   const [bulkMarking, setBulkMarking] = useState(false);
   const [expandedSeasons, setExpandedSeasons] = useState<Set<number>>(new Set());
+  const [showPicker, setShowPicker] = useState(false);
 
   useEffect(() => {
     if (!showId) return;
@@ -158,6 +160,9 @@ export function ShowDetailPage() {
                 Add to My Shows
               </button>
             )}
+            <button className="btn btn-ghost" onClick={() => setShowPicker(true)}>
+              Add to list
+            </button>
             <button
               className="btn btn-primary"
               onClick={() => markAllWatched(show.episodes)}
@@ -253,6 +258,10 @@ export function ShowDetailPage() {
           </div>
         );
       })}
+
+      {showPicker && (
+        <AddToListPicker tvmazeShowId={show.id} onClose={() => setShowPicker(false)} />
+      )}
     </div>
   );
 }
