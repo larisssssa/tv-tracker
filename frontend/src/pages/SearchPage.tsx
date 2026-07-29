@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
+import { AddToListPicker } from "../components/AddToListPicker";
 import type { ShowSummary } from "../types";
 
 const DEBOUNCE_MS = 300;
@@ -10,6 +11,7 @@ export function SearchPage() {
   const [results, setResults] = useState<ShowSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
+  const [pickerShowId, setPickerShowId] = useState<number | null>(null);
   const latestRequestId = useRef(0);
 
   async function runSearch(searchQuery: string) {
@@ -87,10 +89,23 @@ export function SearchPage() {
               >
                 {addedIds.has(show.id) ? "Added" : "Add to My Shows"}
               </button>
+              <button
+                className="btn btn-ghost btn-small"
+                onClick={() => setPickerShowId(show.id)}
+              >
+                Add to list
+              </button>
             </div>
           </li>
         ))}
       </ul>
+
+      {pickerShowId !== null && (
+        <AddToListPicker
+          tvmazeShowId={pickerShowId}
+          onClose={() => setPickerShowId(null)}
+        />
+      )}
     </div>
   );
 }
