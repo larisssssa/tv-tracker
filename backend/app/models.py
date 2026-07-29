@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Integer, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, String, Integer, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -22,6 +22,9 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     watched_episodes: Mapped[list["WatchedEpisode"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    show_lists: Mapped[list["ShowList"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -58,3 +61,42 @@ class WatchedEpisode(Base):
     rating: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="watched_episodes")
+
+
+class ShowList(Base):
+    """A user-created, named group of shows (e.g. "Favorites", "Watch Later").
+
+    Purely organizational: independent of TrackedShow/watch-progress. A show
+    can be tracked without being in any list, and can be in a list without
+    being tracked.
+    """
+
+    __tablename__ = "show_lists"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    name: Mapped[str] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    # Reserved for future shareable/public lists. No public-viewing endpoint
+    # exists yet — this column just avoids a breaking-change migration later.
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    user: Mapped["User"] = relationship(back_populates="show_lists")
+    items: Mapped[list["ShowListItem"]] = relationship(
+        back_populates="show_list", cascade="all, delete-orphan"
+    )
+
+
+class ShowListItem(Base):
+    """A single show's membership in a ShowList. A show can belong to
+    multiple lists at once (one row per list/show pair)."""
+
+    __tablename__ = "show_list_items"
+    __table_args__ = (UniqueConstraint("list_id", "tvmaze_show_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    list_id: Mapped[int] = mapped_column(ForeignKey("show_lists.id"))
+    tvmaze_show_id: Mapped[int] = mapped_column(Integer, index=True)
+    added_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    show_list: Mapped["ShowList"] = relationship(back_populates="items")
