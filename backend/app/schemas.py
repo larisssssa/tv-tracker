@@ -106,3 +106,50 @@ class MyShowOut(BaseModel):
     watched_count: int
     total_aired_count: int
     rating: int | None = None
+
+
+# --- Show lists ---
+
+class CreateListRequest(BaseModel):
+    name: str
+
+
+class RenameListRequest(BaseModel):
+    name: str
+
+
+class AddShowToListRequest(BaseModel):
+    tvmaze_show_id: int
+
+
+class ShowListOut(BaseModel):
+    """A list's own metadata, with no show data (cheap — no TVMaze calls)."""
+
+    id: int
+    name: str
+    created_at: datetime
+    is_public: bool
+
+    class Config:
+        from_attributes = True
+
+
+class ListedShow(BaseModel):
+    """A show as it appears inside a list — enriched with TVMaze metadata,
+    but no watch-progress fields (lists are purely organizational)."""
+
+    tvmaze_show_id: int
+    name: str
+    image: str | None = None
+    status: str | None = None
+    added_at: datetime
+
+
+class ShowListDetailOut(BaseModel):
+    """A list with its full, TVMaze-enriched show contents."""
+
+    id: int
+    name: str
+    created_at: datetime
+    is_public: bool
+    shows: list[ListedShow]
