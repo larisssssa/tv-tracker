@@ -535,3 +535,66 @@
 .star-rating-small .star-rating-star {
   font-size: 16px;
 }
+
+/* ---------- Add to list picker ---------- */
+
+.add-to-list-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 22, 35, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: var(--spacing-16);
+}
+
+.add-to-list-picker {
+  background: var(--surface-card);
+  border-radius: var(--radius-cards);
+  box-shadow: var(--shadow-md);
+  padding: var(--card-padding);
+  width: 100%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+}
+
+.add-to-list-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.add-to-list-picker-header h3 {
+  margin: 0;
+  font-size: var(--text-heading-sm);
+  color: var(--color-midnight-ink);
+}
+
+.add-to-list-picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+.add-to-list-picker-list label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--color-midnight-ink);
+}
+
+.add-to-list-picker-list input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-aurora-magenta);
+  flex-shrink: 0;
+}
