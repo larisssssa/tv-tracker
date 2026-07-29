@@ -43,3 +43,22 @@ export interface User {
   id: number;
   email: string;
 }
+
+export interface ShowList {
+  id: number;
+  name: string;
+  created_at: string;
+  is_public: boolean;
+}
+
+export interface ListedShow {
+  tvmaze_show_id: number;
+  name: string;
+  image: string | null;
+  status: string | null;
+  added_at: string;
+}
+
+export interface ShowListDetail extends ShowList {
+  shows: ListedShow[];
+}
