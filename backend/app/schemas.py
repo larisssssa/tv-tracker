@@ -13,9 +13,16 @@ class UserCreate(BaseModel):
 class UserOut(BaseModel):
     id: int
     email: EmailStr
+    created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class UserStatsOut(BaseModel):
+    shows_tracked: int
+    episodes_watched: int
+    member_since: datetime
 
 
 class Token(BaseModel):
