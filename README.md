@@ -27,8 +27,9 @@ everything you track.
 backend/    FastAPI + SQLite
   app/
     main.py           app entrypoint, CORS, router registration, /health
-    models.py         SQLAlchemy models: User, TrackedShow, WatchedEpisode
-                        (both TrackedShow and WatchedEpisode carry an
+    models.py         SQLAlchemy models: User, TrackedShow, WatchedEpisode,
+                        ShowList, ShowListItem
+                        (TrackedShow and WatchedEpisode each carry an
                         optional 1-5 `rating` field, set independently)
     schemas.py         Pydantic request/response shapes
     security.py        password hashing (bcrypt) + JWT auth
@@ -38,6 +39,8 @@ backend/    FastAPI + SQLite
       shows.py          search + show detail (proxies TVMaze)
       tracking.py       track/untrack shows, mark/unmark episodes
                           (single + bulk), "my shows" with next-up
+      lists.py          custom show lists (create/rename/delete,
+                          add/remove shows) — independent of TrackedShow
     services/
       tvmaze.py          all TVMaze HTTP calls live here
   tests/                pytest suite (see Testing below)
@@ -50,8 +53,10 @@ frontend/   React + TypeScript + Vite
       MyShowsPage.tsx     tracked shows with watch progress
       SearchPage.tsx      live show search
       ShowDetailPage.tsx  season/episode list, bulk watch actions
+      ListsPage.tsx       manage custom lists; view/edit one list's shows
     components/
       StarRating.tsx      shared 1-5 star rating control (episode + show)
+      AddToListPicker.tsx modal: toggle a show's membership across lists
     api/client.ts        typed fetch wrapper, one function per endpoint
     context/AuthContext.tsx
     types.ts
@@ -68,6 +73,11 @@ simple and means we never go stale relative to TVMaze's catalog.
 Removing a show from "My Shows" only deletes its `TrackedShow` row —
 your `WatchedEpisode` history for that show is kept. Re-adding the same
 show later restores your watched progress instead of starting over.
+
+Custom lists (`ShowList`/`ShowListItem`) are a separate, purely
+organizational concept from "My Shows" (`TrackedShow`). A show can be in
+a list without being tracked, tracked without being in any list, or both
+at once — being in a list carries no watch-progress meaning.
 
 ## Features
 
@@ -89,6 +99,11 @@ show later restores your watched progress instead of starting over.
   detail page) and a separate 1-5 star rating on the show itself (on
   "My Shows"). The two are independent: a show's rating is not an
   average of its episode ratings.
+- **Custom lists** — organize shows into named lists (e.g. "Favorites",
+  "Watch Later") from the "Lists" nav page, or via an "Add to list"
+  picker on the search and show detail pages. A show can belong to
+  multiple lists, and lists work independently of "My Shows" — a show
+  doesn't need to be tracked to be added to a list.
 
 ## Design system
 
@@ -119,6 +134,13 @@ from `/auth/login`). `/shows/*` routes are unauthenticated proxies to TVMaze.
 | POST | `/tracking/episodes/bulk` | Mark many episodes watched at once; idempotent per-episode |
 | POST | `/tracking/episodes/bulk-unmark` | Unmark many episodes at once |
 | GET | `/tracking/episodes/watched` | All of the current user's watched episodes, each with `rating` |
+| POST | `/lists` | Create a list; `{name}` → 201 + the new list |
+| GET | `/lists` | List the current user's lists (metadata only, no shows — cheap, no TVMaze calls) |
+| GET | `/lists/{list_id}` | One list's detail, with its shows enriched from TVMaze; 404 if not owned |
+| PUT | `/lists/{list_id}` | Rename a list; 404 if not owned |
+| DELETE | `/lists/{list_id}` | Delete a list (does not affect `TrackedShow`/watch history for its shows) |
+| POST | `/lists/{list_id}/shows` | Add a show to a list; idempotent; 404 if list not owned |
+| DELETE | `/lists/{list_id}/shows/{tvmaze_show_id}` | Remove a show from a list |
 | GET | `/health` | `{"status": "ok"}` |
 
 Interactive docs (Swagger UI) are available at http://localhost:8000/docs
@@ -152,11 +174,12 @@ Open http://localhost:5173.
 
 ## Testing
 
-Backend has a pytest suite in `backend/tests/` (25 tests): auth flows,
+Backend has a pytest suite in `backend/tests/` (38 tests): auth flows,
 bulk mark/unmark correctness and idempotency, cross-user isolation, the
 "my shows" next-episode/next-unaired-episode computation (using
 `pytest-mock` to stub TVMaze responses so tests don't hit the network),
-and episode/show rating validation and persistence.
+episode/show rating validation and persistence, and custom list
+CRUD/membership operations and cross-user isolation.
 
 ```bash
 cd backend
