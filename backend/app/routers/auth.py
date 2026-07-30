@@ -3,9 +3,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import User
-from ..schemas import Token, UserCreate, UserOut
-from ..security import create_access_token, hash_password, verify_password
+from ..models import TrackedShow, User, WatchedEpisode
+from ..schemas import Token, UserCreate, UserOut, UserStatsOut
+from ..security import create_access_token, get_current_user, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -31,3 +31,21 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
     token = create_access_token(subject=user.email)
     return Token(access_token=token)
+
+
+@router.get("/me", response_model=UserOut)
+def get_me(user: User = Depends(get_current_user)):
+    return user
+
+
+@router.get("/me/stats", response_model=UserStatsOut)
+def get_my_stats(
+    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+):
+    shows_tracked = db.query(TrackedShow).filter_by(user_id=user.id).count()
+    episodes_watched = db.query(WatchedEpisode).filter_by(user_id=user.id).count()
+    return UserStatsOut(
+        shows_tracked=shows_tracked,
+        episodes_watched=episodes_watched,
+        member_since=user.created_at,
+    )
