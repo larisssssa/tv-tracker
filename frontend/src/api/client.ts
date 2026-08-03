@@ -6,6 +6,7 @@ import type {
   ShowListDetail,
   ShowSummary,
   User,
+  UserStats,
   WatchedEpisode,
 } from "../types";
 
@@ -66,6 +67,14 @@ export const api = {
     body.set("username", email);
     body.set("password", password);
     return request("/auth/login", { method: "POST", body });
+  },
+
+  async me(): Promise<User> {
+    return request("/auth/me");
+  },
+
+  async myStats(): Promise<UserStats> {
+    return request("/auth/me/stats");
   },
 
   async searchShows(query: string): Promise<ShowSummary[]> {
