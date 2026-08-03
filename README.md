@@ -35,7 +35,7 @@ backend/    FastAPI + SQLite
     security.py        password hashing (bcrypt) + JWT auth
     db.py               SQLite engine/session setup
     routers/
-      auth.py           register / login
+      auth.py           register / login / me / me/stats
       shows.py          search + show detail (proxies TVMaze)
       tracking.py       track/untrack shows, mark/unmark episodes
                           (single + bulk), "my shows" with next-up
@@ -54,6 +54,7 @@ frontend/   React + TypeScript + Vite
       SearchPage.tsx      live show search
       ShowDetailPage.tsx  season/episode list, bulk watch actions
       ListsPage.tsx       manage custom lists; view/edit one list's shows
+      ProfilePage.tsx     email, member-since date, and stat cards
     components/
       StarRating.tsx      shared 1-5 star rating control (episode + show)
       AddToListPicker.tsx modal: toggle a show's membership across lists
@@ -104,6 +105,10 @@ at once — being in a list carries no watch-progress meaning.
   picker on the search and show detail pages. A show can belong to
   multiple lists, and lists work independently of "My Shows" — a show
   doesn't need to be tracked to be added to a list.
+- **Profile** — a read-only page showing your email, member-since date,
+  and two stat cards: total shows tracked and total episodes watched.
+  The episode count is all-time (it doesn't drop if you later untrack a
+  show, since watch history is never deleted on untrack).
 
 ## Design system
 
@@ -122,6 +127,8 @@ from `/auth/login`). `/shows/*` routes are unauthenticated proxies to TVMaze.
 | --- | --- | --- |
 | POST | `/auth/register` | `{email, password}` → 201 + user (no password in response) |
 | POST | `/auth/login` | OAuth2 form fields (`username`/`password`) → 200 + JWT bearer token |
+| GET | `/auth/me` | The current user (`id`, `email`, `created_at`) |
+| GET | `/auth/me/stats` | `shows_tracked`, `episodes_watched` (all-time), `member_since` |
 | GET | `/shows/search?q=` | Search TVMaze; empty query returns `[]` |
 | GET | `/shows/{show_id}` | Show detail + full episode list |
 | GET | `/tracking/shows` | "My Shows" — each show enriched with `next_episode`, `next_unaired_episode`, watch counts, `rating` |
@@ -174,12 +181,13 @@ Open http://localhost:5173.
 
 ## Testing
 
-Backend has a pytest suite in `backend/tests/` (38 tests): auth flows,
+Backend has a pytest suite in `backend/tests/` (45 tests): auth flows,
 bulk mark/unmark correctness and idempotency, cross-user isolation, the
 "my shows" next-episode/next-unaired-episode computation (using
 `pytest-mock` to stub TVMaze responses so tests don't hit the network),
-episode/show rating validation and persistence, and custom list
-CRUD/membership operations and cross-user isolation.
+episode/show rating validation and persistence, custom list
+CRUD/membership operations and cross-user isolation, and profile stats
+correctness (including that stats survive untracking a show).
 
 ```bash
 cd backend
