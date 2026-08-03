@@ -5,6 +5,7 @@ import { AuthPage } from "./pages/AuthPage";
 import { SearchPage } from "./pages/SearchPage";
 import { MyShowsPage } from "./pages/MyShowsPage";
 import { ListsPage } from "./pages/ListsPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { ShowDetailPage } from "./pages/ShowDetailPage";
 import { UpNextPage } from "./pages/UpNextPage";
 import "./App.css";
@@ -31,6 +32,7 @@ function NavBar() {
       <Link to="/my-shows">My Shows</Link>
       <Link to="/lists">Lists</Link>
       <Link to="/search">Search</Link>
+      <Link to="/profile">Profile</Link>
       <button
         className="navbar-link"
         onClick={() => {
@@ -88,6 +90,14 @@ function AppRoutes() {
             element={
               <RequireAuth>
                 <ShowDetailPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <ProfilePage />
               </RequireAuth>
             }
           />
