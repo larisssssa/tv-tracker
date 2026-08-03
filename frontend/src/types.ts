@@ -42,6 +42,13 @@ export interface WatchedEpisode {
 export interface User {
   id: number;
   email: string;
+  created_at: string;
+}
+
+export interface UserStats {
+  shows_tracked: number;
+  episodes_watched: number;
+  member_since: string;
 }
 
 export interface ShowList {
