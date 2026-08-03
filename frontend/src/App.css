@@ -598,3 +598,36 @@
   accent-color: var(--color-aurora-magenta);
   flex-shrink: 0;
 }
+
+/* ---------- Profile page ---------- */
+
+.profile-member-since {
+  color: var(--color-pebble);
+  font-size: var(--text-caption);
+  margin-bottom: var(--spacing-32);
+}
+
+.stat-card-row {
+  display: flex;
+  gap: var(--spacing-16);
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 180px;
+  text-align: center;
+}
+
+.stat-card-value {
+  font-size: var(--text-heading-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-midnight-ink);
+  margin: 0;
+}
+
+.stat-card-label {
+  font-size: var(--text-caption);
+  color: var(--color-pebble);
+  margin: var(--spacing-8) 0 0;
+}
