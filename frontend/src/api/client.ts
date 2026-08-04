@@ -1,6 +1,7 @@
 import type {
   Episode,
   MyShow,
+  Notification,
   ShowDetail,
   ShowList,
   ShowListDetail,
@@ -185,5 +186,13 @@ export const api = {
 
   async removeShowFromList(listId: number, tvmazeShowId: number): Promise<void> {
     await request(`/lists/${listId}/shows/${tvmazeShowId}`, { method: "DELETE" });
+  },
+
+  async listNotifications(): Promise<Notification[]> {
+    return request("/notifications");
+  },
+
+  async markNotificationRead(notificationId: number): Promise<Notification> {
+    return request(`/notifications/${notificationId}/read`, { method: "POST" });
   },
 };
