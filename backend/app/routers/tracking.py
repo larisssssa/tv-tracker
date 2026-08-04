@@ -123,6 +123,7 @@ async def list_my_shows(
                 next_unaired_episode=next_unaired_episode,
                 watched_count=watched_count,
                 total_aired_count=len(aired_episodes),
+                added_at=track.added_at,
             )
         )
 

@@ -31,6 +31,7 @@ export interface MyShow {
   watched_count: number;
   total_aired_count: number;
   rating: number | null;
+  added_at: string;
 }
 
 export interface WatchedEpisode {

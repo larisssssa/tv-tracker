@@ -113,6 +113,7 @@ class MyShowOut(BaseModel):
     watched_count: int
     total_aired_count: int
     rating: int | None = None
+    added_at: datetime
 
 
 # --- Show lists ---
