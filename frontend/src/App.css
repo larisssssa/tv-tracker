@@ -293,6 +293,28 @@
   background: color-mix(in srgb, var(--color-cloud-veil) 45%, transparent);
 }
 
+.status-badge.status-new {
+  color: #ffffff;
+  border-color: transparent;
+  background: var(--color-aurora-magenta);
+}
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: var(--color-aurora-magenta);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
 .upcoming-note {
   font-size: var(--text-caption);
   color: var(--color-pebble);
