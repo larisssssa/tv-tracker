@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
-import type { Episode, MyShow } from "../types";
+import type { Episode, MyShow, Notification } from "../types";
 
 interface UpNextItem {
   show: MyShow;
@@ -25,12 +25,18 @@ function toUpNextItem(show: MyShow): UpNextItem | null {
 
 export function UpNextPage() {
   const [shows, setShows] = useState<MyShow[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
     setLoading(true);
     try {
-      setShows(await api.myShows());
+      const [myShows, myNotifications] = await Promise.all([
+        api.myShows(),
+        api.listNotifications(),
+      ]);
+      setShows(myShows);
+      setNotifications(myNotifications);
     } finally {
       setLoading(false);
     }
@@ -46,7 +52,16 @@ export function UpNextPage() {
     await refresh();
   }
 
+  async function handleDismissNotification(notification: Notification) {
+    await api.markNotificationRead(notification.id);
+    setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+  }
+
   if (loading) return <p>Loading...</p>;
+
+  const notificationByEpisodeId = new Map(
+    notifications.map((n) => [n.tvmaze_episode_id, n])
+  );
 
   const upNext = shows
     .map(toUpNextItem)
@@ -86,52 +101,66 @@ export function UpNextPage() {
         <p className="page-subtitle">What to watch next, across every show you track.</p>
       </div>
       <ul className="show-list">
-        {upNext.map((item) => (
-          <li key={item.show.tvmaze_show_id} className="show-list-item">
-            {item.show.image && <img src={item.show.image} alt={item.show.name} />}
-            <div className="show-info">
-              <div className="show-title-row">
-                <Link
-                  className="show-name"
-                  to={`/shows/${item.show.tvmaze_show_id}`}
-                >
-                  {item.show.name}
-                </Link>
-                {item.show.status && (
-                  <span
-                    className={`status-badge status-${item.show.status.toLowerCase()}`}
+        {upNext.map((item) => {
+          const notification = notificationByEpisodeId.get(item.episode.id);
+          return (
+            <li key={item.show.tvmaze_show_id} className="show-list-item">
+              {item.show.image && <img src={item.show.image} alt={item.show.name} />}
+              <div className="show-info">
+                <div className="show-title-row">
+                  <Link
+                    className="show-name"
+                    to={`/shows/${item.show.tvmaze_show_id}`}
                   >
-                    {item.show.status}
-                  </span>
-                )}
-                {!item.aired && (
-                  <span className="status-badge status-upcoming">Upcoming</span>
+                    {item.show.name}
+                  </Link>
+                  {item.show.status && (
+                    <span
+                      className={`status-badge status-${item.show.status.toLowerCase()}`}
+                    >
+                      {item.show.status}
+                    </span>
+                  )}
+                  {!item.aired && (
+                    <span className="status-badge status-upcoming">Upcoming</span>
+                  )}
+                  {notification && (
+                    <span className="status-badge status-new">New!</span>
+                  )}
+                </div>
+                <p className={item.aired ? "show-next-up" : "show-upcoming"}>
+                  S{item.episode.season}E{item.episode.number} &mdash;{" "}
+                  {item.episode.name}
+                </p>
+                {item.episode.airdate && (
+                  <p className="show-upcoming">
+                    {item.aired ? "Aired" : "Airs"} {item.episode.airdate}
+                  </p>
                 )}
               </div>
-              <p className={item.aired ? "show-next-up" : "show-upcoming"}>
-                S{item.episode.season}E{item.episode.number} &mdash;{" "}
-                {item.episode.name}
-              </p>
-              {item.episode.airdate && (
-                <p className="show-upcoming">
-                  {item.aired ? "Aired" : "Airs"} {item.episode.airdate}
-                </p>
-              )}
-            </div>
-            <div className="actions">
-              {item.aired ? (
-                <button
-                  className="btn btn-primary btn-small"
-                  onClick={() => handleMarkWatched(item)}
-                >
-                  Mark watched
-                </button>
-              ) : (
-                <span className="upcoming-note">Not aired yet</span>
-              )}
-            </div>
-          </li>
-        ))}
+              <div className="actions">
+                {notification && (
+                  <button
+                    className="btn btn-ghost btn-small"
+                    onClick={() => handleDismissNotification(notification)}
+                  >
+                    Dismiss
+                  </button>
+                )}
+                {item.aired ? (
+                  <button
+                    className="btn btn-primary btn-small"
+                    onClick={() => handleMarkWatched(item)}
+                  >
+                    Mark watched
+                  </button>
+                ) : (
+                  <span className="upcoming-note">Not aired yet</span>
+                )}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
