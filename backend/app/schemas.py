@@ -161,3 +161,17 @@ class ShowListDetailOut(BaseModel):
     created_at: datetime
     is_public: bool
     shows: list[ListedShow]
+
+
+# --- Notifications ---
+
+class NotificationOut(BaseModel):
+    id: int
+    tvmaze_show_id: int
+    tvmaze_episode_id: int
+    air_date: str
+    created_at: datetime
+    read_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
