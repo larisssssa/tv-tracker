@@ -70,3 +70,12 @@ export interface ListedShow {
 export interface ShowListDetail extends ShowList {
   shows: ListedShow[];
 }
+
+export interface Notification {
+  id: number;
+  tvmaze_show_id: number;
+  tvmaze_episode_id: number;
+  air_date: string;
+  created_at: string;
+  read_at: string | null;
+}
