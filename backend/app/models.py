@@ -27,6 +27,9 @@ class User(Base):
     show_lists: Mapped[list["ShowList"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    notifications: Mapped[list["PendingNotification"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class TrackedShow(Base):
@@ -100,3 +103,25 @@ class ShowListItem(Base):
     added_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     show_list: Mapped["ShowList"] = relationship(back_populates="items")
+
+
+class PendingNotification(Base):
+    """A recorded 'this user should be notified about this upcoming episode'
+    event. In-app only for v1 — no email/push delivery.
+
+    One row per (user, episode): the daily poll job skips episodes that
+    already have a row, so re-polling never creates duplicates.
+    """
+
+    __tablename__ = "pending_notifications"
+    __table_args__ = (UniqueConstraint("user_id", "tvmaze_episode_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    tvmaze_show_id: Mapped[int] = mapped_column(Integer, index=True)
+    tvmaze_episode_id: Mapped[int] = mapped_column(Integer, index=True)
+    air_date: Mapped[str] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    read_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped["User"] = relationship(back_populates="notifications")
