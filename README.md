@@ -26,14 +26,18 @@ everything you track.
 ```
 backend/    FastAPI + SQLite
   app/
-    main.py           app entrypoint, CORS, router registration, /health
+    main.py           app entrypoint, CORS, router registration, /health,
+                        starts the notification scheduler on startup
     models.py         SQLAlchemy models: User, TrackedShow, WatchedEpisode,
-                        ShowList, ShowListItem
+                        ShowList, ShowListItem, PendingNotification
                         (TrackedShow and WatchedEpisode each carry an
                         optional 1-5 `rating` field, set independently)
     schemas.py         Pydantic request/response shapes
     security.py        password hashing (bcrypt) + JWT auth
     db.py               SQLite engine/session setup
+    scheduler.py        in-process APScheduler job: polls TVMaze daily for
+                          each tracked show's upcoming episodes and records
+                          a PendingNotification for any not already seen
     routers/
       auth.py           register / login / me / me/stats
       shows.py          search + show detail (proxies TVMaze)
@@ -41,6 +45,7 @@ backend/    FastAPI + SQLite
                           (single + bulk), "my shows" with next-up
       lists.py          custom show lists (create/rename/delete,
                           add/remove shows) — independent of TrackedShow
+      notifications.py  list unread notifications, mark one read
     services/
       tvmaze.py          all TVMaze HTTP calls live here
   tests/                pytest suite (see Testing below)
@@ -49,7 +54,9 @@ frontend/   React + TypeScript + Vite
   src/
     pages/
       AuthPage.tsx        login / register
-      UpNextPage.tsx      home page — next episode across all tracked shows
+      UpNextPage.tsx      home page — next episode across all tracked shows;
+                            tags rows with an unread notification as "New!"
+                            with an inline "Dismiss" (mark read) action
       MyShowsPage.tsx     tracked shows with watch progress
       SearchPage.tsx      live show search
       ShowDetailPage.tsx  season/episode list, bulk watch actions
@@ -83,6 +90,12 @@ Custom lists (`ShowList`/`ShowListItem`) are a separate, purely
 organizational concept from "My Shows" (`TrackedShow`). A show can be in
 a list without being tracked, tracked without being in any list, or both
 at once — being in a list carries no watch-progress meaning.
+
+Notifications are in-app only for v1 — no email/push. A daily background
+job (`scheduler.py`) checks every tracked show's upcoming episodes and
+records one `PendingNotification` row per (user, episode); re-polling
+never creates duplicates for an episode already recorded. Marking a
+notification read is permanent — there's no "unread" toggle back.
 
 ## Features
 
@@ -119,6 +132,11 @@ at once — being in a list carries no watch-progress meaning.
   each custom list's 5 most recently added shows, plus a "View list"
   link per list. Both sections are read-only summaries — managing shows
   and lists still happens on the My Shows and Lists pages.
+- **Notifications** — a daily background job checks upcoming episodes for
+  every show you track and records an in-app notification (no email/push).
+  Unread notifications show as a "New!" badge on the matching row in Up
+  Next, plus a count badge on the "Up Next" nav link; a "Dismiss" button
+  marks one read.
 
 ## Design system
 
@@ -158,6 +176,8 @@ from `/auth/login`). `/shows/*` routes are unauthenticated proxies to TVMaze.
 | DELETE | `/lists/{list_id}` | Delete a list (does not affect `TrackedShow`/watch history for its shows) |
 | POST | `/lists/{list_id}/shows` | Add a show to a list; idempotent; 404 if list not owned |
 | DELETE | `/lists/{list_id}/shows/{tvmaze_show_id}` | Remove a show from a list |
+| GET | `/notifications` | Current user's unread notifications, ordered by `air_date` |
+| POST | `/notifications/{id}/read` | Mark one notification read; 404 if not owned |
 | GET | `/health` | `{"status": "ok"}` |
 
 Interactive docs (Swagger UI) are available at http://localhost:8000/docs
@@ -179,6 +199,9 @@ uvicorn app.main:app --reload --port 8000
 
 This creates `tv_tracker.db` (SQLite) on first run.
 
+On startup, the backend also starts an in-process notification poll job
+(runs immediately, then every 24 hours) — see Known limitations below.
+
 ### Frontend
 
 ```bash
@@ -191,13 +214,16 @@ Open http://localhost:5173.
 
 ## Testing
 
-Backend has a pytest suite in `backend/tests/` (45 tests): auth flows,
+Backend has a pytest suite in `backend/tests/` (56 tests): auth flows,
 bulk mark/unmark correctness and idempotency, cross-user isolation, the
 "my shows" next-episode/next-unaired-episode computation (using
 `pytest-mock` to stub TVMaze responses so tests don't hit the network),
 episode/show rating validation and persistence, custom list
-CRUD/membership operations and cross-user isolation, and profile stats
-correctness (including that stats survive untracking a show).
+CRUD/membership operations and cross-user isolation, profile stats
+correctness (including that stats survive untracking a show), and the
+notification poll job/API (dedup on re-poll, unread ordering, mark-read,
+cross-user isolation). The poll job is tested by calling it directly with
+an injected test session — it never touches the real dev database.
 
 ```bash
 cd backend
@@ -218,5 +244,11 @@ There is no frontend test suite yet.
 - `GET /tracking/shows` fetches each tracked show's full episode list
   from TVMaze on every request (no local caching). Fine for a handful
   of shows; would get slow if a user tracks hundreds of shows.
-- No password reset, no social features, no notifications/calendar —
+- The notification poll job runs in-process (APScheduler, no separate
+  worker) — it only runs while the backend process is up, and there's
+  no persistence of job state across restarts beyond the
+  `PendingNotification` rows already written. Fine for local/single-
+  instance use; a real deployment would want an external scheduler or
+  a multi-instance-safe job store.
+- No password reset, no social features, no email/push notifications —
   see open GitHub issues for planned follow-ups.
