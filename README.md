@@ -54,9 +54,13 @@ frontend/   React + TypeScript + Vite
       SearchPage.tsx      live show search
       ShowDetailPage.tsx  season/episode list, bulk watch actions
       ListsPage.tsx       manage custom lists; view/edit one list's shows
-      ProfilePage.tsx     email, member-since date, and stat cards
+      ProfilePage.tsx     email, member-since date, stat cards, and a
+                            read-only summary of My Shows + custom lists
     components/
-      StarRating.tsx      shared 1-5 star rating control (episode + show)
+      StarRating.tsx      shared 1-5 star rating control (editable or
+                            read-only, via the `readOnly` prop)
+      ShowCard.tsx        poster + name + read-only rating, used on the
+                            Profile page's My Shows / Lists summaries
       AddToListPicker.tsx modal: toggle a show's membership across lists
     api/client.ts        typed fetch wrapper, one function per endpoint
     context/AuthContext.tsx
@@ -108,7 +112,13 @@ at once — being in a list carries no watch-progress meaning.
 - **Profile** — a read-only page showing your email, member-since date,
   and two stat cards: total shows tracked and total episodes watched.
   The episode count is all-time (it doesn't drop if you later untrack a
-  show, since watch history is never deleted on untrack).
+  show, since watch history is never deleted on untrack). Below the
+  stats, a "My Shows" section shows your 5 most recently tracked shows
+  as show cards (poster, name, view-only star rating), plus a "View all
+  my shows" link; a "Your Lists" section shows the same card layout for
+  each custom list's 5 most recently added shows, plus a "View list"
+  link per list. Both sections are read-only summaries — managing shows
+  and lists still happens on the My Shows and Lists pages.
 
 ## Design system
 
