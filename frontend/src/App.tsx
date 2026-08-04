@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { Navigate, Route, Routes, Link, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
+import { api } from "./api/client";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AuthPage } from "./pages/AuthPage";
 import { SearchPage } from "./pages/SearchPage";
@@ -19,6 +21,27 @@ function RequireAuth({ children }: { children: ReactNode }) {
 function NavBar() {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let cancelled = false;
+    async function refresh() {
+      try {
+        const notifications = await api.listNotifications();
+        if (!cancelled) setUnreadCount(notifications.length);
+      } catch {
+        // navbar badge is best-effort; a failed fetch just leaves the count as-is
+      }
+    }
+    refresh();
+    const interval = setInterval(refresh, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) return null;
 
@@ -28,7 +51,10 @@ function NavBar() {
         <span className="wordmark-icon" aria-hidden="true" />
         TV Tracker
       </Link>
-      <Link to="/up-next">Up Next</Link>
+      <Link to="/up-next">
+        Up Next
+        {unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}
+      </Link>
       <Link to="/my-shows">My Shows</Link>
       <Link to="/lists">Lists</Link>
       <Link to="/search">Search</Link>
